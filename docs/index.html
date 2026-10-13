@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101b2f"><title>SatGate · Lightning checkout demo</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#eaf4ff;background:#0c1424}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 75% 5%,#223b5c,transparent 35%),#0c1424;min-height:100vh}
+main{max-width:940px;padding:36px 24px;margin:auto}
+header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:900;letter-spacing:-.06em;font-size:25px} .logo span{color:#ffbe36}
+.badge{border:1px solid #d5a544;border-radius:99px;color:#ffdd89;padding:8px 12px;font-weight:700;font-size:12px}
+h1{font-size:clamp(38px,7vw,68px);line-height:1.05;letter-spacing:-.06em;margin:48px 0 20px}
+h1 em{font-style:normal;color:#ffbe36} .lede{font-size:19px;line-height:1.55;max-width:700px;color:#aabbd4}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:35px}
+.card{background:#15243d;border:1px solid #35516d;border-radius:22px;padding:25px;box-shadow:0 13px 35px #0003}
+.card h2{margin:8px 0;font-size:23px}.price{font-size:37px;font-weight:850;letter-spacing:-.05em;margin:20px 0}
+.price small{font-size:14px;letter-spacing:0;color:#adc1d9}
+button{background:#ffbe36;border:0;border-radius:11px;font-weight:800;color:#091424;padding:13px 20px;font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid white;outline-offset:3px}
+button:disabled{cursor:default;opacity:.6}
+button.secondary{background:#23496e;color:#fff;border:1px solid #45779e}
+p{line-height:1.6}.label{color:#9db1c9;font-size:13px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+#checkout{margin-top:22px}#state{padding:16px;border:1px solid #31435e;background:#0b172b;border-radius:12px;min-height:82px;overflow-wrap:anywhere}
+a{color:#ffca5c}.foot{margin-top:40px;color:#a9bed8;font-size:14px}
+code{color:#d7e7ff;background:#263955;padding:2px 5px;border-radius:4px}
+</style></head>
+<body><main>
+<header><div class="logo">⚡ Sat<span>Gate</span></div><div class="badge">DEMO ONLY · NO MONEY INVOLVED</div></header>
+<h1>A checkout built for <em>Bitcoin.</em></h1>
+<p class="lede">An open-source merchant checkout prototype with server-side order tracking, idempotency, test coverage and an experimental BTCPay integration in development.</p>
+<div class="grid">
+<section class="card"><div class="label">Digital product</div><h2>Supporter pass</h2><p>Demonstration SKU A. Try the checkout experience without a wallet.</p><div class="price">2,500 <small>sats</small></div><button type="button" data-sku="supporter">Create invoice</button></section>
+<section class="card"><div class="label">Digital product</div><h2>Builder pass</h2><p>Demonstration SKU B. The amount is fixed and verified by the backend in the actual server app.</p><div class="price">10,000 <small>sats</small></div><button type="button" data-sku="builder">Create invoice</button></section>
+</div>
+<section class="card" id="checkout" aria-live="polite" aria-atomic="true">
+<div class="label">Interactive, browser-only showcase</div><h2>Order status</h2><p id="state">Choose a product to simulate creating an invoice.</p>
+<button class="secondary" id="simulate" type="button" hidden>Simulate settlement</button>
+<button class="secondary" id="reset" type="button" hidden>Reset</button>
+</section>
+<div class="foot">
+<p><strong>Nothing on this page is connected to Bitcoin.</strong> This browser demonstration stores no orders, requests no payment and sends no data anywhere. Its simulated success must never be used for real fulfillment. The <a href="https://github.com/Trelliz/satgate">GitHub source</a> includes a Python/SQLite API implementing genuine persistence and server-side business rules, plus automated tests. The advanced BTCPay package is under development.</p>
+<p>Free and open source under the MIT license. <a href="https://github.com/Trelliz/satgate">Source code and setup</a> · <a href="https://github.com/Trelliz/satgate/actions">Continuous integration</a></p>
+</div></main>
+<script>
+"use strict";
+let order=null;
+const output=document.getElementById('state');
+const simulate=document.getElementById('simulate');
+const reset=document.getElementById('reset');
+function render(){
+ if(!order){output.textContent='Choose a product to simulate creating an invoice.';simulate.hidden=reset.hidden=true;return}
+ output.textContent='Invoice: '+order.id+'\nProduct: '+order.sku+'\nAmount: '+order.sats.toLocaleString()+' sats\nStatus: '+order.status.toUpperCase()+'\nThis invoice is simulated — pay nothing.';
+ output.style.whiteSpace='pre-line';
+ simulate.hidden=order.status==='settled';reset.hidden=false
+}
+document.querySelectorAll('[data-sku]').forEach(b=>b.addEventListener('click',()=>{
+const sku=b.dataset.sku;const id=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-demo';
+order={sku,id,sats:sku==='supporter'?2500:10000,status:'pending'};render()
+}));
+simulate.addEventListener('click',()=>{if(order){order.status='settled';render()}});
+reset.addEventListener('click',()=>{order=null;render()});
+</script></body></html>
